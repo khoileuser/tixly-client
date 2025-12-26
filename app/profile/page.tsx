@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import {
     Card,
     CardContent,
@@ -11,9 +10,9 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { authService, UserProfile } from "@/lib/auth"
-import { Loader2, User, Mail, Phone, Shield, LogOut } from "lucide-react"
+import { Loader2, User, Mail, Phone, Shield } from "lucide-react"
 
-export default function DashboardPage() {
+export default function ProfilePage() {
     const router = useRouter()
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -42,11 +41,6 @@ export default function DashboardPage() {
         loadProfile()
     }, [router])
 
-    const handleLogout = () => {
-        authService.logout()
-        router.push("/login")
-    }
-
     if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -62,14 +56,6 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-12">
             <div className="mx-auto max-w-4xl">
-                <div className="mb-8 flex items-center justify-between">
-                    <h1 className="text-3xl font-bold">Dashboard</h1>
-                    <Button variant="outline" onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                    </Button>
-                </div>
-
                 <div className="grid gap-6 md:grid-cols-2">
                     <Card>
                         <CardHeader>

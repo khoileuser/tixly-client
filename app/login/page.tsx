@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,6 @@ import { authService } from "@/lib/auth"
 import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
 
 export default function LoginPage() {
-    const router = useRouter()
     const searchParams = useSearchParams()
     const [formData, setFormData] = useState({
         username: "",
@@ -58,8 +57,8 @@ export default function LoginPage() {
             const result = await authService.login(formData)
 
             if (result.success) {
-                // Redirect to home or dashboard
-                router.push("/home")
+                // Redirect to home page
+                window.location.href = "/"
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Login failed")
