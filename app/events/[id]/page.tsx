@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,14 +33,15 @@ interface Event {
     date: string
     location: string
     venue: string
-    categoryId: string
-    categoryName: string
-    price: number
-    totalTickets: number
-    availableTickets: number
-    status: string
+    categoryIds: string[]
+    pricePerSeat: number
+    totalSeats: number
+    availableSeats: number
+    takenSeats: number[]
+    seatsPerRow: number
+    status: string // PUBLISHED or DRAFT
+    timeStatus: string // upcoming or past
     imageUrl?: string
-    organizerId: string
     organizerName: string
     createdAt: string
 }
@@ -50,9 +52,22 @@ export default function EventDetailsPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = use(params)
+    const router = useRouter()
     const [event, setEvent] = useState<Event | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
+
+    const handleBuyTickets = () => {
+        // Check if user is logged in
+        const token = localStorage.getItem("accessToken")
+        if (!token) {
+            // Redirect to login with return URL
+            router.push(`/login?returnUrl=/booking/${id}`)
+        } else {
+            // Go to booking page
+            router.push(`/booking/${id}`)
+        }
+    }
 
     const fetchEventDetails = useCallback(async () => {
         try {
@@ -111,13 +126,13 @@ export default function EventDetailsPage({
         if (!event) return null
 
         const percentageAvailable =
-            (event.availableTickets / event.totalTickets) * 100
+            (event.availableSeats / event.totalSeats) * 100
 
         if (percentageAvailable === 0) {
             return { text: "Sold Out", color: "bg-red-500" }
         } else if (percentageAvailable < 10) {
             return {
-                text: `Only ${event.availableTickets} left!`,
+                text: `Only ${event.availableSeats} left!`,
                 color: "bg-orange-500",
             }
         } else if (percentageAvailable < 25) {
@@ -181,7 +196,7 @@ export default function EventDetailsPage({
             </div>
 
             {/* Main Content */}
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-4">
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* Left Column - Event Details */}
                     <div className="lg:col-span-2 space-y-6">
@@ -203,9 +218,7 @@ export default function EventDetailsPage({
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <Badge className="mb-2">
-                                            {event.categoryName}
-                                        </Badge>
+                                        <Badge className="mb-2">Event</Badge>
                                         <CardTitle className="text-3xl mb-2">
                                             {event.title}
                                         </CardTitle>
@@ -266,11 +279,11 @@ export default function EventDetailsPage({
                                         <Ticket className="h-5 w-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-600">
-                                                Available Tickets
+                                                Available Seats
                                             </p>
                                             <p className="font-semibold">
-                                                {event.availableTickets} /{" "}
-                                                {event.totalTickets}
+                                                {event.availableSeats} /{" "}
+                                                {event.totalSeats}
                                             </p>
                                         </div>
                                     </div>
@@ -278,10 +291,12 @@ export default function EventDetailsPage({
                                         <DollarSign className="h-5 w-5 text-gray-500" />
                                         <div>
                                             <p className="text-sm text-gray-600">
-                                                Ticket Price
+                                                Price per Seat
                                             </p>
                                             <p className="font-semibold">
-                                                {formatPrice(event.price)}
+                                                {formatPrice(
+                                                    event.pricePerSeat
+                                                )}
                                             </p>
                                         </div>
                                     </div>
@@ -303,20 +318,23 @@ export default function EventDetailsPage({
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-600">
-                                            Price per ticket
+                                            Price per seat
                                         </span>
                                         <span className="text-2xl font-bold">
-                                            {formatPrice(event.price)}
+                                            {formatPrice(event.pricePerSeat)}
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-500">
-                                        {event.availableTickets} tickets
-                                        available
+                                        {event.availableSeats} seats available
                                     </div>
                                 </div>
 
-                                {event.availableTickets > 0 ? (
-                                    <Button className="w-full" size="lg">
+                                {event.availableSeats > 0 ? (
+                                    <Button
+                                        className="w-full"
+                                        size="lg"
+                                        onClick={handleBuyTickets}
+                                    >
                                         <Ticket className="mr-2 h-5 w-5" />
                                         Buy Tickets
                                     </Button>

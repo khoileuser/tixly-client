@@ -21,14 +21,15 @@ interface Event {
     date: string
     location: string
     venue: string
-    categoryId: string
-    categoryName: string
-    price: number
-    totalTickets: number
-    availableTickets: number
-    status: string
+    categoryIds: string[]
+    pricePerSeat: number
+    totalSeats: number
+    availableSeats: number
+    takenSeats: number[]
+    seatsPerRow: number
+    status: string // PUBLISHED or DRAFT
+    timeStatus: string // upcoming or past
     imageUrl?: string
-    organizerId: string
     organizerName: string
 }
 
@@ -46,14 +47,19 @@ export default function EventsPage() {
             setIsLoading(true)
             setError("")
 
+            // Fetch all published events (backend defaults to PUBLISHED status)
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/events?status=upcoming`
+                `${process.env.NEXT_PUBLIC_API_URL}/events`
             )
 
             const result = await response.json()
 
             if (result.success) {
-                setEvents(result.data)
+                // Filter to only show upcoming events on the client side
+                const upcomingEvents = result.data.filter(
+                    (event: Event) => event.timeStatus === "upcoming"
+                )
+                setEvents(upcomingEvents)
             } else {
                 setError(result.message || "Failed to load events")
             }
@@ -146,9 +152,9 @@ export default function EventsPage() {
 
                                     <CardHeader>
                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                            <Badge>{event.categoryName}</Badge>
-                                            {event.availableTickets <
-                                                event.totalTickets * 0.1 && (
+                                            <Badge>Event</Badge>
+                                            {event.availableSeats <
+                                                event.totalSeats * 0.1 && (
                                                 <Badge
                                                     variant="destructive"
                                                     className="text-xs"
@@ -187,12 +193,13 @@ export default function EventsPage() {
                                             <div className="flex items-center gap-2">
                                                 <Ticket className="h-4 w-4 text-gray-500" />
                                                 <span className="text-sm text-gray-600">
-                                                    {event.availableTickets}{" "}
-                                                    left
+                                                    {event.availableSeats} left
                                                 </span>
                                             </div>
                                             <span className="font-bold text-lg">
-                                                {formatPrice(event.price)}
+                                                {formatPrice(
+                                                    event.pricePerSeat
+                                                )}
                                             </span>
                                         </div>
                                     </CardContent>
