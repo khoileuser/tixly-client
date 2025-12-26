@@ -106,6 +106,13 @@ class AuthService {
             localStorage.setItem("idToken", result.data.idToken)
             localStorage.setItem("refreshToken", result.data.refreshToken)
             localStorage.setItem("user", JSON.stringify(result.data.user))
+            // Store username separately for navbar
+            localStorage.setItem("userName", result.data.user.username)
+
+            // Dispatch custom event to notify navbar of auth state change
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("authStateChanged"))
+            }
         }
 
         return result
@@ -214,8 +221,13 @@ class AuthService {
         localStorage.removeItem("idToken")
         localStorage.removeItem("refreshToken")
         localStorage.removeItem("user")
-    }
+        localStorage.removeItem("userName")
 
+        // Dispatch custom event to notify navbar of auth state change
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("authStateChanged"))
+        }
+    }
     isAuthenticated(): boolean {
         return !!localStorage.getItem("accessToken")
     }
