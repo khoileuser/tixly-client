@@ -20,7 +20,7 @@ import { AlertCircle, Loader2, CheckCircle2, ArrowLeft } from "lucide-react"
 export default function ForgotPasswordPage() {
     const router = useRouter()
     const [step, setStep] = useState<"request" | "reset">("request")
-    const [username, setUsername] = useState("")
+    const [identifier, setIdentifier] = useState("")
     const [code, setCode] = useState("")
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
@@ -33,15 +33,15 @@ export default function ForgotPasswordPage() {
         setError("")
         setSuccess("")
 
-        if (!username) {
-            setError("Please enter your username")
+        if (!identifier) {
+            setError("Please enter your username or email")
             return
         }
 
         setIsLoading(true)
 
         try {
-            const result = await authService.forgotPassword(username)
+            const result = await authService.forgotPassword(identifier)
 
             if (result.success) {
                 setSuccess("Password reset code sent to your email!")
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
 
         try {
             const result = await authService.resetPassword(
-                username,
+                identifier,
                 code,
                 newPassword
             )
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
         setSuccess("")
 
         try {
-            const result = await authService.forgotPassword(username)
+            const result = await authService.forgotPassword(identifier)
             if (result.success) {
                 setSuccess("Code resent successfully!")
                 setTimeout(() => setSuccess(""), 3000)
@@ -207,7 +207,7 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                         </CardContent>
-                        <CardFooter className="flex flex-col gap-4">
+                        <CardFooter className="flex flex-col gap-4 mt-4">
                             <Button
                                 type="submit"
                                 className="w-full"
@@ -253,7 +253,8 @@ export default function ForgotPasswordPage() {
                 <CardHeader>
                     <CardTitle>Forgot Password</CardTitle>
                     <CardDescription>
-                        Enter your username to receive a password reset code
+                        Enter your username or email to receive a password reset
+                        code
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRequestReset}>
@@ -273,21 +274,23 @@ export default function ForgotPasswordPage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="identifier">
+                                Username or Email
+                            </Label>
                             <Input
-                                id="username"
+                                id="identifier"
                                 type="text"
-                                placeholder="johndoe"
-                                value={username}
+                                placeholder="johndoe or john@example.com"
+                                value={identifier}
                                 onChange={(e) => {
-                                    setUsername(e.target.value)
+                                    setIdentifier(e.target.value)
                                     setError("")
                                 }}
                                 required
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
+                    <CardFooter className="flex flex-col gap-4 mt-4">
                         <Button
                             type="submit"
                             className="w-full"
