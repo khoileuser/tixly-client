@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import {
     Card,
     CardContent,
@@ -11,7 +10,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { authService, UserProfile } from "@/lib/auth"
-import { Loader2, User, Mail, Phone, Shield, LogOut } from "lucide-react"
+import { Loader2, User, Mail, Phone, Shield } from "lucide-react"
 
 export default function ProfilePage() {
     const router = useRouter()
