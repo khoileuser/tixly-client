@@ -15,10 +15,12 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
 import { authService, UserProfile, Ticket } from "@/lib/auth"
+import { bookingService } from "@/lib/booking"
 import {
     Loader2,
     User,
@@ -29,7 +31,10 @@ import {
     MapPin,
     CreditCard,
     Ticket as TicketIcon,
+    AlertCircle,
 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 
 export default function ProfilePage() {
     const router = useRouter()
@@ -37,6 +42,9 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true)
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [showRefundDialog, setShowRefundDialog] = useState(false)
+    const [isRefunding, setIsRefunding] = useState(false)
+    const [refundError, setRefundError] = useState("")
 
     useEffect(() => {
         const loadProfile = async () => {
@@ -65,6 +73,7 @@ export default function ProfilePage() {
     const handleTicketClick = (ticket: Ticket) => {
         setSelectedTicket(ticket)
         setIsDialogOpen(true)
+        setRefundError("")
     }
 
     const handleContinueBooking = () => {
@@ -74,10 +83,66 @@ export default function ProfilePage() {
         }
     }
 
+    const canRefund = (ticket: Ticket): boolean => {
+        if (ticket.status !== "CONFIRMED") return false
+
+        const purchaseDate = new Date(ticket.purchaseDate || ticket.createdAt)
+        const now = new Date()
+        const hoursSincePurchase =
+            (now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60)
+
+        return hoursSincePurchase <= 24
+    }
+
+    const getRefundDeadline = (ticket: Ticket): string => {
+        const purchaseDate = new Date(ticket.purchaseDate || ticket.createdAt)
+        const deadline = new Date(purchaseDate.getTime() + 24 * 60 * 60 * 1000)
+        return deadline.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+    }
+
+    const handleRefundClick = () => {
+        setShowRefundDialog(true)
+    }
+
+    const handleConfirmRefund = async () => {
+        if (!selectedTicket) return
+
+        setIsRefunding(true)
+        setRefundError("")
+
+        try {
+            await bookingService.refundBooking(selectedTicket.id)
+
+            // Reload profile to get updated ticket status
+            const result = await authService.getProfile()
+            if (result.success) {
+                setProfile(result.data)
+            }
+
+            setShowRefundDialog(false)
+            setIsDialogOpen(false)
+            setSelectedTicket(null)
+        } catch (error) {
+            setRefundError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to refund booking"
+            )
+            setShowRefundDialog(false)
+        } finally {
+            setIsRefunding(false)
+        }
+    }
+
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
         )
     }
@@ -240,19 +305,22 @@ export default function ProfilePage() {
                                                                 }
                                                             </p>
                                                         </div>
-                                                        <span
-                                                            className={`px-2 py-1 rounded text-xs font-medium ${
+                                                        <Badge
+                                                            className={`${
                                                                 ticket.status ===
                                                                 "CONFIRMED"
                                                                     ? "bg-green-100 text-green-800"
                                                                     : ticket.status ===
                                                                       "PENDING"
                                                                     ? "bg-yellow-100 text-yellow-800"
+                                                                    : ticket.status ===
+                                                                      "REFUNDED"
+                                                                    ? "bg-blue-100 text-blue-800"
                                                                     : "bg-gray-100 text-gray-800"
                                                             }`}
                                                         >
                                                             {ticket.status}
-                                                        </span>
+                                                        </Badge>
                                                     </div>
                                                     <div className="text-sm space-y-1">
                                                         <p className="text-gray-600">
@@ -260,7 +328,7 @@ export default function ProfilePage() {
                                                                 Date:
                                                             </strong>{" "}
                                                             {new Date(
-                                                                ticket.event.date
+                                                                ticket.event.datetime
                                                             ).toLocaleDateString(
                                                                 "en-US",
                                                                 {
@@ -333,19 +401,22 @@ export default function ProfilePage() {
                                     <span className="text-sm text-gray-500">
                                         Status
                                     </span>
-                                    <span
-                                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    <Badge
+                                        className={` ${
                                             selectedTicket.status ===
                                             "CONFIRMED"
                                                 ? "bg-green-100 text-green-800"
                                                 : selectedTicket.status ===
                                                   "PENDING"
                                                 ? "bg-yellow-100 text-yellow-800"
+                                                : selectedTicket.status ===
+                                                  "REFUNDED"
+                                                ? "bg-blue-100 text-blue-800"
                                                 : "bg-gray-100 text-gray-800"
                                         }`}
                                     >
                                         {selectedTicket.status}
-                                    </span>
+                                    </Badge>
                                 </div>
 
                                 {/* Event Information */}
@@ -372,7 +443,7 @@ export default function ProfilePage() {
                                                     </p>
                                                     <p className="font-medium">
                                                         {new Date(
-                                                            selectedTicket.event.date
+                                                            selectedTicket.event.datetime
                                                         ).toLocaleDateString(
                                                             "en-US",
                                                             {
@@ -437,15 +508,6 @@ export default function ProfilePage() {
 
                                     <div className="flex justify-between">
                                         <span className="text-sm text-gray-600">
-                                            Number of Tickets
-                                        </span>
-                                        <span className="font-medium">
-                                            {selectedTicket.takenSeats.length}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between">
-                                        <span className="text-sm text-gray-600">
                                             Price per Seat
                                         </span>
                                         <span className="font-medium">
@@ -473,7 +535,7 @@ export default function ProfilePage() {
                                 {/* Customer Information */}
                                 {(selectedTicket.name ||
                                     selectedTicket.email ||
-                                    selectedTicket.phone) && (
+                                    selectedTicket.phoneNumber) && (
                                     <div className="space-y-2">
                                         <h4 className="font-semibold text-sm text-gray-700">
                                             Customer Information
@@ -498,13 +560,13 @@ export default function ProfilePage() {
                                                 </span>
                                             </div>
                                         )}
-                                        {selectedTicket.phone && (
+                                        {selectedTicket.phoneNumber && (
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-600">
                                                     Phone
                                                 </span>
                                                 <span className="font-medium">
-                                                    {selectedTicket.phone}
+                                                    {selectedTicket.phoneNumber}
                                                 </span>
                                             </div>
                                         )}
@@ -526,8 +588,42 @@ export default function ProfilePage() {
                                     })}
                                 </div>
 
+                                {/* Refund Information */}
+                                {selectedTicket.status === "CONFIRMED" && (
+                                    <div
+                                        className={`text-xs text-center p-3 rounded ${
+                                            canRefund(selectedTicket)
+                                                ? "bg-blue-50 text-blue-700"
+                                                : "bg-gray-50 text-gray-600"
+                                        }`}
+                                    >
+                                        {canRefund(selectedTicket) ? (
+                                            <>
+                                                Refund available until{" "}
+                                                <strong>
+                                                    {getRefundDeadline(
+                                                        selectedTicket
+                                                    )}
+                                                </strong>
+                                            </>
+                                        ) : (
+                                            "Refund period has expired (24 hours from purchase)"
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Error Message */}
+                                {refundError && (
+                                    <Alert variant="destructive">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertDescription>
+                                            {refundError}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+
                                 {/* Action Buttons */}
-                                <div className="flex gap-3 pt-4">
+                                <div className="flex gap-3">
                                     {selectedTicket.status === "PENDING" && (
                                         <Button
                                             onClick={handleContinueBooking}
@@ -537,11 +633,26 @@ export default function ProfilePage() {
                                             Continue Booking
                                         </Button>
                                     )}
+                                    {selectedTicket.status === "CONFIRMED" &&
+                                        canRefund(selectedTicket) && (
+                                            <Button
+                                                onClick={handleRefundClick}
+                                                disabled={isRefunding}
+                                                variant="destructive"
+                                                className="flex-1"
+                                            >
+                                                Request Refund
+                                            </Button>
+                                        )}
                                     <Button
                                         onClick={() => setIsDialogOpen(false)}
                                         variant="outline"
                                         className={
-                                            selectedTicket.status === "PENDING"
+                                            selectedTicket.status ===
+                                                "PENDING" ||
+                                            (selectedTicket.status ===
+                                                "CONFIRMED" &&
+                                                canRefund(selectedTicket))
                                                 ? "flex-1"
                                                 : "w-full"
                                         }
@@ -551,6 +662,78 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Refund Confirmation Dialog */}
+                <Dialog
+                    open={showRefundDialog}
+                    onOpenChange={setShowRefundDialog}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Confirm Refund Request</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to refund this ticket?
+                                This action cannot be undone and the refund will
+                                be processed immediately.
+                            </DialogDescription>
+                        </DialogHeader>
+                        {selectedTicket && (
+                            <div className="py-4 space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">
+                                        Event:
+                                    </span>
+                                    <span className="font-medium">
+                                        {selectedTicket.event?.title}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">
+                                        Seats:
+                                    </span>
+                                    <span className="font-medium">
+                                        {selectedTicket.takenSeats.join(", ")}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between border-t pt-2">
+                                    <span className="text-gray-600">
+                                        Refund Amount:
+                                    </span>
+                                    <span className="font-bold text-green-600">
+                                        $
+                                        {(
+                                            selectedTicket.pricePerSeat *
+                                            selectedTicket.takenSeats.length
+                                        ).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowRefundDialog(false)}
+                                disabled={isRefunding}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleConfirmRefund}
+                                disabled={isRefunding}
+                            >
+                                {isRefunding ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Processing Refund...
+                                    </>
+                                ) : (
+                                    "Confirm Refund"
+                                )}
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

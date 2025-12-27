@@ -13,25 +13,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Ticket, Loader2, AlertCircle } from "lucide-react"
-
-interface Event {
-    id: string
-    title: string
-    description: string
-    date: string
-    location: string
-    venue: string
-    categoryIds: string[]
-    pricePerSeat: number
-    totalSeats: number
-    availableSeats: number
-    takenSeats: number[]
-    seatsPerRow: number
-    status: string // PUBLISHED or DRAFT
-    timeStatus: string // upcoming or past
-    imageUrl?: string
-    organizerName: string
-}
+import type { Event } from "@/interfaces"
 
 export default function EventsPage() {
     const [events, setEvents] = useState<Event[]>([])
@@ -89,11 +71,8 @@ export default function EventsPage() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Loading events...</p>
-                </div>
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
         )
     }
@@ -145,6 +124,7 @@ export default function EventsPage() {
                                                 src={event.imageUrl}
                                                 alt={event.title}
                                                 fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                 className="object-cover"
                                             />
                                         </div>
@@ -163,7 +143,7 @@ export default function EventsPage() {
                                                 </Badge>
                                             )}
                                         </div>
-                                        <CardTitle className="line-clamp-2">
+                                        <CardTitle className="line-clamp-2 leading-relaxed">
                                             {event.title}
                                         </CardTitle>
                                         <CardDescription className="line-clamp-2">
@@ -176,7 +156,7 @@ export default function EventsPage() {
                                         <div className="flex items-center gap-2 text-sm text-gray-600">
                                             <Calendar className="h-4 w-4" />
                                             <span>
-                                                {formatDate(event.date)}
+                                                {formatDate(event.datetime)}
                                             </span>
                                         </div>
 

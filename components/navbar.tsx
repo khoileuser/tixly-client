@@ -76,7 +76,7 @@ export default function Navbar() {
                             href="/"
                             className="flex items-center gap-2 font-bold text-xl w-fit"
                         >
-                            <Ticket className="h-6 w-6 text-blue-600" />
+                            <Ticket className="h-6 w-6 text-blue-600 mt-1" />
                             <span className="text-gray-900">Tixly</span>
                         </Link>
                     </div>
