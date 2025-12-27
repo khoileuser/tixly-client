@@ -42,6 +42,31 @@ export interface RegisterResponse {
     }
 }
 
+export interface Ticket {
+    id: string
+    eventId: string
+    userId: string
+    status: string
+    pricePerSeat: number
+    takenSeats: number[]
+    purchaseDate: string
+    createdAt: string
+    updatedAt: string
+    name?: string
+    email?: string
+    phone?: string
+    event?: {
+        id: string
+        title: string
+        description: string
+        date: string
+        location: string
+        venue: string
+        pricePerSeat: number
+        imageUrl?: string
+    } | null
+}
+
 export interface UserProfile {
     cognitoId: string
     username: string
@@ -49,7 +74,7 @@ export interface UserProfile {
     name: string
     phoneNumber: string | null
     role: string
-    tickets: string[]
+    tickets: Ticket[]
     createdAt: string
     updatedAt: string
 }
@@ -108,6 +133,16 @@ class AuthService {
             localStorage.setItem("user", JSON.stringify(result.data.user))
             // Store username separately for navbar
             localStorage.setItem("userName", result.data.user.username)
+
+            // Fetch user profile to get role
+            try {
+                const profile = await this.getProfile()
+                if (profile.success) {
+                    localStorage.setItem("userRole", profile.data.role)
+                }
+            } catch (error) {
+                console.error("Failed to fetch user role:", error)
+            }
 
             // Dispatch custom event to notify navbar of auth state change
             if (typeof window !== "undefined") {

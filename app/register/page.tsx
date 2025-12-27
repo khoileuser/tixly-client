@@ -202,7 +202,7 @@ export default function RegisterPage() {
 
     if (needsVerification) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50 px-4 py-12">
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <CardTitle>Verify Your Email</CardTitle>
@@ -279,7 +279,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+        <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50 px-4 py-12">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Create an Account</CardTitle>

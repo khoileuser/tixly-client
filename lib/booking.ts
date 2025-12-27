@@ -25,6 +25,9 @@ export interface CustomerInfo {
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("accessToken")
+    if (!token) {
+        console.warn("No access token found in localStorage")
+    }
     return {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -55,6 +58,11 @@ export const bookingService = {
 
     // Create a booking
     async createBooking(bookingData: BookingData) {
+        console.log("Creating booking with data:", {
+            ...bookingData,
+            seats: bookingData.seats.length,
+        })
+
         const response = await fetch(`${API_BASE_URL}/bookings`, {
             method: "POST",
             headers: getAuthHeaders(),
@@ -63,10 +71,13 @@ export const bookingService = {
 
         if (!response.ok) {
             const error = await response.json()
+            console.error("Booking creation failed:", error)
             throw new Error(error.message || "Failed to create booking")
         }
 
-        return await response.json()
+        const result = await response.json()
+        console.log("Booking created successfully:", result)
+        return result
     },
 
     // Get booking by ID
