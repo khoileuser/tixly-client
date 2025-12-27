@@ -19,19 +19,7 @@ import {
     Loader2,
     TrendingUp,
 } from "lucide-react"
-
-interface AnalyticsData {
-    totalUsers: number
-    totalEvents: number
-    totalTicketsSold: number
-    totalRevenue: number
-    pendingBookings: number
-    recentActivity: {
-        type: string
-        description: string
-        timestamp: string
-    }[]
-}
+import type { AnalyticsData } from "@/interfaces"
 
 export default function AnalyticsPage() {
     const router = useRouter()
@@ -97,7 +85,7 @@ export default function AnalyticsPage() {
     if (isLoading) {
         return (
             <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
         )
     }

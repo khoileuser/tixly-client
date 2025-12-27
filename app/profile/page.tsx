@@ -76,8 +76,8 @@ export default function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
         )
     }
@@ -432,15 +432,6 @@ export default function ProfilePage() {
                                             {selectedTicket.takenSeats.join(
                                                 ", "
                                             )}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between">
-                                        <span className="text-sm text-gray-600">
-                                            Number of Tickets
-                                        </span>
-                                        <span className="font-medium">
-                                            {selectedTicket.takenSeats.length}
                                         </span>
                                     </div>
 

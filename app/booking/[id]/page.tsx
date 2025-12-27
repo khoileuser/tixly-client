@@ -26,21 +26,7 @@ import {
 } from "lucide-react"
 import { bookingService } from "@/lib/booking"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
-interface Event {
-    id: string
-    title: string
-    description: string
-    date: string
-    location: string
-    pricePerSeat: number
-    availableSeats: number
-    totalSeats: number
-    takenSeats: number[]
-    seatsPerRow: number
-    status: string // PUBLISHED or DRAFT
-    timeStatus: string // upcoming or past
-}
+import type { Event } from "@/interfaces"
 
 type BookingStep = "seats" | "payment" | "info" | "confirmation"
 
@@ -242,7 +228,9 @@ export default function BookingPage({
         if (bookingId) {
             try {
                 await bookingService.cancelBooking(bookingId)
+                // Booking successfully cancelled (or already deleted)
             } catch (err) {
+                // Only log unexpected errors (not 404s, which are handled in the service)
                 console.error("Error cancelling expired booking:", err)
             }
         }
@@ -284,7 +272,7 @@ export default function BookingPage({
                 ...customerInfo,
             })
 
-            setBookingId(result.data.ticketId)
+            setBookingId(result.data.id)
             setExpiresAt(result.data.expiresAt)
             setCurrentStep("payment")
         } catch (err) {
@@ -402,6 +390,34 @@ export default function BookingPage({
         }
     }
 
+    const handleCancelBooking = async () => {
+        if (!bookingId) return
+
+        // Confirm cancellation with user
+        if (!confirm("Are you sure you want to cancel this booking? Your seat selection will be released.")) {
+            return
+        }
+
+        setIsLoading(true)
+        setError("")
+
+        try {
+            await bookingService.cancelBooking(bookingId)
+            // Clear the saved booking state
+            sessionStorage.removeItem(`booking_${eventId}`)
+            // Redirect back to event page
+            router.push(`/events/${eventId}`)
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to cancel booking"
+            )
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     const generateSeats = () => {
         if (!event) return []
 
@@ -446,8 +462,8 @@ export default function BookingPage({
 
     if (isLoadingEvent) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
             </div>
         )
     }
@@ -1022,24 +1038,35 @@ export default function BookingPage({
 
                                 {/* Step 2: Payment Button */}
                                 {currentStep === "payment" && (
-                                    <Button
-                                        onClick={handleConfirmPayment}
-                                        disabled={isLoading}
-                                        className="w-full"
-                                        size="lg"
-                                    >
-                                        {isLoading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Processing Payment...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <CreditCard className="mr-2 h-4 w-4" />
-                                                Confirm Payment
-                                            </>
-                                        )}
-                                    </Button>
+                                    <>
+                                        <Button
+                                            onClick={handleConfirmPayment}
+                                            disabled={isLoading}
+                                            className="w-full"
+                                            size="lg"
+                                        >
+                                            {isLoading ? (
+                                                <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Processing Payment...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CreditCard className="mr-2 h-4 w-4" />
+                                                    Confirm Payment
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button
+                                            onClick={handleCancelBooking}
+                                            disabled={isLoading}
+                                            variant="outline"
+                                            className="w-full mt-2"
+                                            size="lg"
+                                        >
+                                            Cancel Booking
+                                        </Button>
+                                    </>
                                 )}
 
                                 {/* Step 3: Customer Info Button */}

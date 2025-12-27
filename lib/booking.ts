@@ -1,27 +1,10 @@
+import type { BookingData, PaymentData, CustomerInfo } from "../interfaces"
+
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"
 
-export interface BookingData {
-    eventId: string
-    seats: number[]
-    pricePerSeat: number
-    name?: string
-    email?: string
-    phone?: string
-}
-
-export interface PaymentData {
-    cardNumber: string
-    expiryDate: string
-    cvv: string
-    cardholderName: string
-}
-
-export interface CustomerInfo {
-    name: string
-    email: string
-    phone: string
-}
+// Re-export types for backwards compatibility
+export type { BookingData, PaymentData, CustomerInfo } from "../interfaces"
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("accessToken")
@@ -58,11 +41,6 @@ export const bookingService = {
 
     // Create a booking
     async createBooking(bookingData: BookingData) {
-        console.log("Creating booking with data:", {
-            ...bookingData,
-            seats: bookingData.seats.length,
-        })
-
         const response = await fetch(`${API_BASE_URL}/bookings`, {
             method: "POST",
             headers: getAuthHeaders(),
@@ -76,7 +54,6 @@ export const bookingService = {
         }
 
         const result = await response.json()
-        console.log("Booking created successfully:", result)
         return result
     },
 
@@ -140,9 +117,15 @@ export const bookingService = {
             headers: getAuthHeaders(),
         })
 
-        if (!response.ok) {
+        // 404 means booking already deleted (e.g., by cleanup job), which is fine
+        if (!response.ok && response.status !== 404) {
             const error = await response.json()
             throw new Error(error.message || "Failed to cancel booking")
+        }
+
+        // Return success response or null for 404
+        if (response.status === 404) {
+            return { success: true, message: "Booking already cancelled" }
         }
 
         return await response.json()

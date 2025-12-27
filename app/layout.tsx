@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: "Tixly - Event Ticketing Platform",
     description: "Your premier event ticketing platform",
+    icons: {
+        icon: "/favicon.svg",
+        shortcut: "/favicon.svg",
+    },
 }
 
 export default function RootLayout({

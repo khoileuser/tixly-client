@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import {
 import { authService } from "@/lib/auth"
 import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
     const searchParams = useSearchParams()
     const [formData, setFormData] = useState({
         username: "",
@@ -156,5 +156,19 @@ export default function LoginPage() {
                 </form>
             </Card>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+            }
+        >
+            <LoginForm />
+        </Suspense>
     )
 }

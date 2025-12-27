@@ -25,26 +25,7 @@ import {
     AlertCircle,
     Users,
 } from "lucide-react"
-
-interface Event {
-    id: string
-    title: string
-    description: string
-    date: string
-    location: string
-    venue: string
-    categoryIds: string[]
-    pricePerSeat: number
-    totalSeats: number
-    availableSeats: number
-    takenSeats: number[]
-    seatsPerRow: number
-    status: string // PUBLISHED or DRAFT
-    timeStatus: string // upcoming or past
-    imageUrl?: string
-    organizerName: string
-    createdAt: string
-}
+import type { Event } from "@/interfaces"
 
 export default function EventDetailsPage({
     params,
@@ -207,6 +188,7 @@ export default function EventDetailsPage({
                                     src={event.imageUrl}
                                     alt={event.title}
                                     fill
+                                    sizes="(max-width: 1024px) 100vw, 66vw"
                                     className="object-cover"
                                     priority
                                 />
