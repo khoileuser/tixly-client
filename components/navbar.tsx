@@ -12,19 +12,23 @@ export default function Navbar() {
     const [authState, setAuthState] = useState<{
         isLoggedIn: boolean
         userName: string
+        userRole: string
     }>({
         isLoggedIn: false,
         userName: "",
+        userRole: "user",
     })
 
     // Function to check auth state
     const checkAuthState = () => {
         const token = localStorage.getItem("accessToken")
         const userName = localStorage.getItem("userName")
+        const userRole = localStorage.getItem("userRole") || "user"
 
         setAuthState({
             isLoggedIn: !!token,
             userName: userName || "User",
+            userRole,
         })
     }
 
@@ -53,7 +57,8 @@ export default function Navbar() {
         localStorage.removeItem("idToken")
         localStorage.removeItem("refreshToken")
         localStorage.removeItem("userName")
-        setAuthState({ isLoggedIn: false, userName: "" })
+        localStorage.removeItem("userRole")
+        setAuthState({ isLoggedIn: false, userName: "", userRole: "user" })
         window.location.href = "/"
     }
 
@@ -99,6 +104,19 @@ export default function Navbar() {
                         >
                             Events
                         </Link>
+                        {authState.userRole === "admin" && (
+                            <Link
+                                href="/analytics"
+                                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                    isActive("/analytics") ||
+                                    pathname.startsWith("/analytics")
+                                        ? "text-blue-600"
+                                        : "text-gray-700"
+                                }`}
+                            >
+                                Analytics
+                            </Link>
+                        )}
                     </div>
 
                     {/* Desktop Auth Buttons */}
@@ -176,6 +194,20 @@ export default function Navbar() {
                             >
                                 Events
                             </Link>
+                            {authState.userRole === "admin" && (
+                                <Link
+                                    href="/analytics"
+                                    className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                        isActive("/analytics") ||
+                                        pathname.startsWith("/analytics")
+                                            ? "text-blue-600"
+                                            : "text-gray-700"
+                                    }`}
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    Analytics
+                                </Link>
+                            )}
 
                             <div className="pt-4 border-t flex flex-col gap-3">
                                 {authState.isLoggedIn ? (

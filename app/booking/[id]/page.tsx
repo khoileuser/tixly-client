@@ -86,6 +86,63 @@ export default function BookingPage({
     })
     const [useRegisteredInfo, setUseRegisteredInfo] = useState(true)
 
+    // Restore booking state from sessionStorage on mount
+    useEffect(() => {
+        const savedBookingState = sessionStorage.getItem(`booking_${eventId}`)
+        if (savedBookingState) {
+            try {
+                const state = JSON.parse(savedBookingState)
+
+                // Check if the booking hasn't expired
+                if (state.expiresAt) {
+                    const expiryTime = new Date(state.expiresAt).getTime()
+                    const now = Date.now()
+
+                    if (now < expiryTime) {
+                        // Restore the booking state
+                        setCurrentStep(state.currentStep || "seats")
+                        setBookingId(state.bookingId || null)
+                        setExpiresAt(state.expiresAt || null)
+                        setSelectedSeats(state.selectedSeats || [])
+                        if (state.customerInfo) {
+                            setCustomerInfo(state.customerInfo)
+                        }
+                    } else {
+                        // Booking expired, clear it
+                        sessionStorage.removeItem(`booking_${eventId}`)
+                    }
+                }
+            } catch (error) {
+                console.error("Error restoring booking state:", error)
+                sessionStorage.removeItem(`booking_${eventId}`)
+            }
+        }
+    }, [eventId])
+
+    // Save booking state to sessionStorage whenever it changes
+    useEffect(() => {
+        if (bookingId) {
+            const bookingState = {
+                currentStep,
+                bookingId,
+                expiresAt,
+                selectedSeats,
+                customerInfo,
+            }
+            sessionStorage.setItem(
+                `booking_${eventId}`,
+                JSON.stringify(bookingState)
+            )
+        }
+    }, [
+        currentStep,
+        bookingId,
+        expiresAt,
+        selectedSeats,
+        customerInfo,
+        eventId,
+    ])
+
     // Fetch event details
     useEffect(() => {
         const fetchEvent = async () => {
@@ -119,18 +176,67 @@ export default function BookingPage({
         fetchBookedSeats()
     }, [eventId])
 
-    // Load user info from localStorage
+    // Load user info from localStorage and fetch full profile
     useEffect(() => {
-        const user = localStorage.getItem("user")
-        if (user) {
-            const userData = JSON.parse(user)
-            setCustomerInfo({
-                name: userData.username || "",
-                email: userData.email || "",
-                phone: "",
-            })
+        const loadUserInfo = async () => {
+            const token = localStorage.getItem("accessToken")
+
+            if (!token) {
+                console.warn("No access token found, redirecting to login")
+                router.push("/login")
+                return
+            }
+
+            try {
+                // Fetch full user profile from API to get complete info
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                )
+
+                if (response.ok) {
+                    const result = await response.json()
+                    if (result.success && result.data) {
+                        setCustomerInfo({
+                            name:
+                                result.data.name || result.data.username || "",
+                            email: result.data.email || "",
+                            phone: result.data.phoneNumber || "",
+                        })
+                    }
+                } else {
+                    // Fallback to localStorage if API fails
+                    const user = localStorage.getItem("user")
+                    if (user) {
+                        const userData = JSON.parse(user)
+                        setCustomerInfo({
+                            name: userData.name || userData.username || "",
+                            email: userData.email || "",
+                            phone: userData.phoneNumber || "",
+                        })
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading user profile:", error)
+                // Fallback to localStorage
+                const user = localStorage.getItem("user")
+                if (user) {
+                    const userData = JSON.parse(user)
+                    setCustomerInfo({
+                        name: userData.name || userData.username || "",
+                        email: userData.email || "",
+                        phone: userData.phoneNumber || "",
+                    })
+                }
+            }
         }
-    }, [])
+
+        loadUserInfo()
+    }, [router])
 
     const handleBookingExpired = async () => {
         if (bookingId) {
@@ -140,6 +246,8 @@ export default function BookingPage({
                 console.error("Error cancelling expired booking:", err)
             }
         }
+        // Clear the saved booking state
+        sessionStorage.removeItem(`booking_${eventId}`)
         router.push(`/events/${eventId}`)
     }
 
@@ -154,6 +262,14 @@ export default function BookingPage({
     const handleCreateBooking = async () => {
         if (selectedSeats.length === 0) {
             setError("Please select at least one seat")
+            return
+        }
+
+        // Check if user is authenticated
+        const token = localStorage.getItem("accessToken")
+        if (!token) {
+            setError("Please log in to continue booking")
+            router.push("/login")
             return
         }
 
@@ -172,9 +288,22 @@ export default function BookingPage({
             setExpiresAt(result.data.expiresAt)
             setCurrentStep("payment")
         } catch (err) {
-            setError(
+            const errorMessage =
                 err instanceof Error ? err.message : "Failed to create booking"
-            )
+
+            // If authentication error, redirect to login
+            if (
+                errorMessage.includes("token") ||
+                errorMessage.includes("auth") ||
+                errorMessage.includes("Unauthorized")
+            ) {
+                setError("Your session has expired. Please log in again.")
+                setTimeout(() => {
+                    router.push("/login")
+                }, 2000)
+            } else {
+                setError(errorMessage)
+            }
         } finally {
             setIsLoading(false)
         }
@@ -239,6 +368,8 @@ export default function BookingPage({
 
         try {
             await bookingService.confirmBooking(bookingId, paymentData)
+            // Clear the timer since payment is confirmed
+            setExpiresAt(null)
             setCurrentStep("info")
         } catch (err) {
             setError(err instanceof Error ? err.message : "Payment failed")
@@ -258,6 +389,8 @@ export default function BookingPage({
                 await bookingService.updateCustomerInfo(bookingId, customerInfo)
             }
             setCurrentStep("confirmation")
+            // Clear the saved booking state on successful completion
+            sessionStorage.removeItem(`booking_${eventId}`)
         } catch (err) {
             setError(
                 err instanceof Error
@@ -532,7 +665,7 @@ export default function BookingPage({
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="cardNumber">
                                             Card Number
                                         </Label>
@@ -566,7 +699,7 @@ export default function BookingPage({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
+                                        <div className="space-y-2">
                                             <Label htmlFor="expiryDate">
                                                 Expiry Date
                                             </Label>
@@ -605,7 +738,7 @@ export default function BookingPage({
                                             )}
                                         </div>
 
-                                        <div>
+                                        <div className="space-y-2">
                                             <Label htmlFor="cvv">CVV</Label>
                                             <Input
                                                 id="cvv"
@@ -635,7 +768,7 @@ export default function BookingPage({
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="cardholderName">
                                             Cardholder Name
                                         </Label>
@@ -697,7 +830,7 @@ export default function BookingPage({
                                         </Label>
                                     </div>
 
-                                    <div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="customerName">
                                             Full Name
                                         </Label>
@@ -714,7 +847,7 @@ export default function BookingPage({
                                         />
                                     </div>
 
-                                    <div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="customerEmail">
                                             Email
                                         </Label>
@@ -732,7 +865,7 @@ export default function BookingPage({
                                         />
                                     </div>
 
-                                    <div>
+                                    <div className="space-y-2">
                                         <Label htmlFor="customerPhone">
                                             Phone Number
                                         </Label>
@@ -933,7 +1066,7 @@ export default function BookingPage({
 
                                 {/* Step 4: Confirmation Buttons */}
                                 {currentStep === "confirmation" && (
-                                    <div className="space-y-3">
+                                    <div>
                                         <Link href="/events">
                                             <Button
                                                 variant="outline"
@@ -945,7 +1078,7 @@ export default function BookingPage({
                                         </Link>
                                         <Link href="/profile">
                                             <Button
-                                                className="w-full"
+                                                className="w-full mt-2"
                                                 size="lg"
                                             >
                                                 <User className="mr-2 h-4 w-4" />

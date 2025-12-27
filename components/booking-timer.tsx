@@ -48,14 +48,17 @@ export default function BookingTimer({
     const isLowTime = minutes < 5
 
     return (
-        <Alert variant={isLowTime ? "destructive" : "default"} className="mb-6">
+        <Alert
+            variant={isLowTime ? "destructive" : "default"}
+            className="mb-6 items-baseline"
+        >
             <Clock className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
                 <span className="font-medium">
                     {timeLeft > 0 ? (
                         <>
                             Time remaining to complete your booking:{" "}
-                            <span className="text-lg font-bold">
+                            <span className="text-md font-bold">
                                 {minutes.toString().padStart(2, "0")}:
                                 {seconds.toString().padStart(2, "0")}
                             </span>
