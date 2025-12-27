@@ -25,7 +25,7 @@ import {
     AlertCircle,
     Users,
 } from "lucide-react"
-import type { Event } from "@/interfaces"
+import type { Event, Category } from "@/interfaces"
 
 export default function EventDetailsPage({
     params,
@@ -37,6 +37,34 @@ export default function EventDetailsPage({
     const [event, setEvent] = useState<Event | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
+    const [categories, setCategories] = useState<Record<string, Category>>({})
+
+    // Fetch categories from API
+    const fetchCategories = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/categories`
+            )
+            const result = await response.json()
+
+            if (result.success) {
+                // Convert array to object keyed by category ID for easy lookup
+                const categoryMap: Record<string, Category> = {}
+                result.data.forEach((category: Category) => {
+                    categoryMap[category.id] = category
+                })
+                setCategories(categoryMap)
+            }
+        } catch (err) {
+            console.error("Error fetching categories:", err)
+            // If categories fail to load, we'll just show without them
+        }
+    }, [])
+
+    // Helper function to get category display name
+    const getCategoryName = (categoryId: string): string => {
+        return categories[categoryId]?.name || "Event"
+    }
 
     const handleBuyTickets = () => {
         // Check if user is logged in
@@ -75,8 +103,9 @@ export default function EventDetailsPage({
     }, [id])
 
     useEffect(() => {
+        fetchCategories()
         fetchEventDetails()
-    }, [fetchEventDetails])
+    }, [fetchCategories, fetchEventDetails])
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString)
@@ -200,7 +229,22 @@ export default function EventDetailsPage({
                             <CardHeader>
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <Badge className="mb-2">Event</Badge>
+                                        <div className="flex flex-wrap gap-1 mb-2">
+                                            {event.categoryIds &&
+                                            event.categoryIds.length > 0 ? (
+                                                event.categoryIds.map(
+                                                    (categoryId) => (
+                                                        <Badge key={categoryId}>
+                                                            {getCategoryName(
+                                                                categoryId
+                                                            )}
+                                                        </Badge>
+                                                    )
+                                                )
+                                            ) : (
+                                                <Badge>Event</Badge>
+                                            )}
+                                        </div>
                                         <CardTitle className="text-3xl mb-2">
                                             {event.title}
                                         </CardTitle>

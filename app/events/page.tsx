@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -13,18 +13,42 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Ticket, Loader2, AlertCircle } from "lucide-react"
-import type { Event } from "@/interfaces"
+import type { Event, Category } from "@/interfaces"
 
 export default function EventsPage() {
     const [events, setEvents] = useState<Event[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
+    const [categories, setCategories] = useState<Record<string, Category>>({})
 
-    useEffect(() => {
-        fetchEvents()
+    // Fetch categories from API
+    const fetchCategories = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/categories`
+            )
+            const result = await response.json()
+
+            if (result.success) {
+                // Convert array to object keyed by category ID for easy lookup
+                const categoryMap: Record<string, Category> = {}
+                result.data.forEach((category: Category) => {
+                    categoryMap[category.id] = category
+                })
+                setCategories(categoryMap)
+            }
+        } catch (err) {
+            console.error("Error fetching categories:", err)
+            // If categories fail to load, we'll just show without them
+        }
     }, [])
 
-    const fetchEvents = async () => {
+    // Helper function to get category display name
+    const getCategoryName = (categoryId: string): string => {
+        return categories[categoryId]?.name || "Event"
+    }
+
+    const fetchEvents = useCallback(async () => {
         try {
             setIsLoading(true)
             setError("")
@@ -51,7 +75,13 @@ export default function EventsPage() {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        // Fetch categories first, then events
+        fetchCategories()
+        fetchEvents()
+    }, [fetchCategories, fetchEvents])
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString)
@@ -132,7 +162,24 @@ export default function EventsPage() {
 
                                     <CardHeader>
                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                            <Badge>Event</Badge>
+                                            <div className="flex flex-wrap gap-1">
+                                                {event.categoryIds &&
+                                                event.categoryIds.length > 0 ? (
+                                                    event.categoryIds.map(
+                                                        (categoryId) => (
+                                                            <Badge
+                                                                key={categoryId}
+                                                            >
+                                                                {getCategoryName(
+                                                                    categoryId
+                                                                )}
+                                                            </Badge>
+                                                        )
+                                                    )
+                                                ) : (
+                                                    <Badge>Event</Badge>
+                                                )}
+                                            </div>
                                             {event.availableSeats <
                                                 event.totalSeats * 0.1 && (
                                                 <Badge
