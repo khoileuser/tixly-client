@@ -2,7 +2,7 @@ export interface Event {
     id: string
     title: string
     description: string
-    date: string
+    datetime: string
     location: string
     venue: string
     categoryIds: string[]

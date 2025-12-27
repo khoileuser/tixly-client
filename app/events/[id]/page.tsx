@@ -224,10 +224,10 @@ export default function EventDetailsPage({
                                     <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
                                     <div>
                                         <p className="font-semibold">
-                                            {formatDate(event.date)}
+                                            {formatDate(event.datetime)}
                                         </p>
                                         <p className="text-sm text-gray-600">
-                                            {formatTime(event.date)}
+                                            {formatTime(event.datetime)}
                                         </p>
                                     </div>
                                 </div>

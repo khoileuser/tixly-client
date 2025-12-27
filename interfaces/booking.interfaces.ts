@@ -4,7 +4,7 @@ export interface BookingData {
     pricePerSeat: number
     name?: string
     email?: string
-    phone?: string
+    phoneNumber?: string
 }
 
 export interface PaymentData {
@@ -17,5 +17,5 @@ export interface PaymentData {
 export interface CustomerInfo {
     name: string
     email: string
-    phone: string
+    phoneNumber: string
 }

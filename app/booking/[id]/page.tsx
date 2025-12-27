@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import BookingTimer from "@/components/booking-timer"
 import {
     ArrowLeft,
@@ -68,9 +76,15 @@ export default function BookingPage({
     const [customerInfo, setCustomerInfo] = useState({
         name: "",
         email: "",
-        phone: "",
+        phoneNumber: "",
     })
     const [useRegisteredInfo, setUseRegisteredInfo] = useState(true)
+    const [customerInfoErrors, setCustomerInfoErrors] = useState<
+        Record<string, string>
+    >({})
+
+    // Cancel dialog state
+    const [showCancelDialog, setShowCancelDialog] = useState(false)
 
     // Restore booking state from sessionStorage on mount
     useEffect(() => {
@@ -191,7 +205,7 @@ export default function BookingPage({
                             name:
                                 result.data.name || result.data.username || "",
                             email: result.data.email || "",
-                            phone: result.data.phoneNumber || "",
+                            phoneNumber: result.data.phoneNumber || "",
                         })
                     }
                 } else {
@@ -202,7 +216,7 @@ export default function BookingPage({
                         setCustomerInfo({
                             name: userData.name || userData.username || "",
                             email: userData.email || "",
-                            phone: userData.phoneNumber || "",
+                            phoneNumber: userData.phoneNumber || "",
                         })
                     }
                 }
@@ -215,7 +229,7 @@ export default function BookingPage({
                     setCustomerInfo({
                         name: userData.name || userData.username || "",
                         email: userData.email || "",
-                        phone: userData.phoneNumber || "",
+                        phoneNumber: userData.phoneNumber || "",
                     })
                 }
             }
@@ -348,6 +362,48 @@ export default function BookingPage({
         return Object.keys(errors).length === 0
     }
 
+    const validateEmail = (email: string) => {
+        if (!email) return ""
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return emailRegex.test(email) ? "" : "Invalid email format"
+    }
+
+    const validatePhoneNumber = (phone: string) => {
+        if (!phone) return "Phone number is required"
+        const phoneRegex = /^\+[1-9]\d{1,14}$/
+        return phoneRegex.test(phone)
+            ? ""
+            : "Must start with + and country code"
+    }
+
+    const handleEmailChange = (email: string) => {
+        setCustomerInfo({
+            ...customerInfo,
+            email,
+        })
+
+        // Live validation
+        const error = validateEmail(email)
+        setCustomerInfoErrors((prev) => ({
+            ...prev,
+            email: error,
+        }))
+    }
+
+    const handlePhoneChange = (phone: string) => {
+        setCustomerInfo({
+            ...customerInfo,
+            phoneNumber: phone,
+        })
+
+        // Live validation
+        const error = validatePhoneNumber(phone)
+        setCustomerInfoErrors((prev) => ({
+            ...prev,
+            phoneNumber: error,
+        }))
+    }
+
     const handleConfirmPayment = async () => {
         if (!validatePayment() || !bookingId) return
 
@@ -368,6 +424,21 @@ export default function BookingPage({
 
     const handleUpdateCustomerInfo = async () => {
         if (!bookingId) return
+
+        // Validate customer info if not using registered info
+        if (!useRegisteredInfo) {
+            const emailError = validateEmail(customerInfo.email)
+            const phoneError = validatePhoneNumber(customerInfo.phoneNumber)
+
+            if (emailError || phoneError) {
+                setCustomerInfoErrors({
+                    email: emailError,
+                    phoneNumber: phoneError,
+                })
+                setError("Please fix the validation errors before continuing")
+                return
+            }
+        }
 
         setIsLoading(true)
         setError("")
@@ -393,11 +464,6 @@ export default function BookingPage({
     const handleCancelBooking = async () => {
         if (!bookingId) return
 
-        // Confirm cancellation with user
-        if (!confirm("Are you sure you want to cancel this booking? Your seat selection will be released.")) {
-            return
-        }
-
         setIsLoading(true)
         setError("")
 
@@ -405,14 +471,15 @@ export default function BookingPage({
             await bookingService.cancelBooking(bookingId)
             // Clear the saved booking state
             sessionStorage.removeItem(`booking_${eventId}`)
+            // Close dialog
+            setShowCancelDialog(false)
             // Redirect back to event page
             router.push(`/events/${eventId}`)
         } catch (err) {
             setError(
-                err instanceof Error
-                    ? err.message
-                    : "Failed to cancel booking"
+                err instanceof Error ? err.message : "Failed to cancel booking"
             )
+            setShowCancelDialog(false)
         } finally {
             setIsLoading(false)
         }
@@ -872,13 +939,24 @@ export default function BookingPage({
                                             type="email"
                                             value={customerInfo.email}
                                             onChange={(e) =>
-                                                setCustomerInfo({
-                                                    ...customerInfo,
-                                                    email: e.target.value,
-                                                })
+                                                handleEmailChange(
+                                                    e.target.value
+                                                )
                                             }
                                             disabled={useRegisteredInfo}
+                                            className={
+                                                !useRegisteredInfo &&
+                                                customerInfoErrors.email
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }
                                         />
+                                        {!useRegisteredInfo &&
+                                            customerInfoErrors.email && (
+                                                <p className="text-sm text-red-500 mt-1">
+                                                    {customerInfoErrors.email}
+                                                </p>
+                                            )}
                                     </div>
 
                                     <div className="space-y-2">
@@ -888,16 +966,35 @@ export default function BookingPage({
                                         <Input
                                             id="customerPhone"
                                             type="tel"
-                                            value={customerInfo.phone}
+                                            value={customerInfo.phoneNumber}
                                             onChange={(e) =>
-                                                setCustomerInfo({
-                                                    ...customerInfo,
-                                                    phone: e.target.value,
-                                                })
+                                                handlePhoneChange(
+                                                    e.target.value
+                                                )
                                             }
                                             disabled={useRegisteredInfo}
                                             placeholder="+1234567890"
+                                            className={
+                                                !useRegisteredInfo &&
+                                                customerInfoErrors.phoneNumber
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }
                                         />
+                                        {!useRegisteredInfo &&
+                                        customerInfoErrors.phoneNumber ? (
+                                            <p className="text-sm text-red-500 mt-1">
+                                                {customerInfoErrors.phoneNumber}
+                                            </p>
+                                        ) : (
+                                            !useRegisteredInfo && (
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Must start with + and
+                                                    country code (e.g., +1 for
+                                                    US, +84 for Vietnam)
+                                                </p>
+                                            )
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -1058,7 +1155,9 @@ export default function BookingPage({
                                             )}
                                         </Button>
                                         <Button
-                                            onClick={handleCancelBooking}
+                                            onClick={() =>
+                                                setShowCancelDialog(true)
+                                            }
                                             disabled={isLoading}
                                             variant="outline"
                                             className="w-full mt-2"
@@ -1118,6 +1217,46 @@ export default function BookingPage({
                         </Card>
                     </div>
                 </div>
+
+                {/* Cancel Booking Confirmation Dialog */}
+                <Dialog
+                    open={showCancelDialog}
+                    onOpenChange={setShowCancelDialog}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Cancel Booking?</DialogTitle>
+                            <DialogDescription>
+                                Are you sure you want to cancel this booking?
+                                Your seat selection will be released and
+                                you&apos;ll need to start over.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowCancelDialog(false)}
+                                disabled={isLoading}
+                            >
+                                Keep Booking
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelBooking}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Cancelling...
+                                    </>
+                                ) : (
+                                    "Yes, Cancel Booking"
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     )

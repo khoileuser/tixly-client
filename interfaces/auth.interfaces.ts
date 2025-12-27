@@ -47,16 +47,17 @@ export interface Ticket {
     pricePerSeat: number
     takenSeats: number[]
     purchaseDate: string
+    refundedAt?: string
     createdAt: string
     updatedAt: string
     name?: string
     email?: string
-    phone?: string
+    phoneNumber?: string
     event?: {
         id: string
         title: string
         description: string
-        date: string
+        datetime: string
         location: string
         venue: string
         pricePerSeat: number

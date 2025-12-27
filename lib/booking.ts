@@ -131,6 +131,24 @@ export const bookingService = {
         return await response.json()
     },
 
+    // Refund booking
+    async refundBooking(ticketId: string) {
+        const response = await fetch(
+            `${API_BASE_URL}/bookings/${ticketId}/refund`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+            }
+        )
+
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.message || "Failed to refund booking")
+        }
+
+        return await response.json()
+    },
+
     // Get user's bookings
     async getUserBookings() {
         const response = await fetch(`${API_BASE_URL}/my-bookings`, {
