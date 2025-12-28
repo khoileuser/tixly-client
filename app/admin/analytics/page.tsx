@@ -96,16 +96,7 @@ export default function AnalyticsPage() {
 
     return (
         <div className="min-h-[calc(100vh-4rem)] bg-gray-50 py-8">
-            <div className="container mx-auto px-4 max-w-7xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Analytics Dashboard
-                    </h1>
-                    <p className="text-gray-600 mt-2">
-                        Overview of your platform&apos;s performance
-                    </p>
-                </div>
-
+            <div className="container mx-auto px-4 max-w-8xl">
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg">
                         {error}
