@@ -195,14 +195,14 @@ function EventSection({
 export default function Home() {
     const [featuredEvents, setFeaturedEvents] = useState<Event[]>([])
     const [trendingEvents, setTrendingEvents] = useState<Event[]>([])
-    const [weekendEvents, setWeekendEvents] = useState<Event[]>([])
+    const [thisWeekEvents, setThisWeekEvents] = useState<Event[]>([])
     const [thisMonthEvents, setThisMonthEvents] = useState<Event[]>([])
     const [categoryMap, setCategoryMap] = useState<Record<string, Category>>({})
     const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     const [loadingFeatured, setLoadingFeatured] = useState(true)
     const [loadingTrending, setLoadingTrending] = useState(true)
-    const [loadingWeekend, setLoadingWeekend] = useState(true)
+    const [loadingThisWeek, setLoadingThisWeek] = useState(true)
     const [loadingThisMonth, setLoadingThisMonth] = useState(true)
 
     // Fetch categories
@@ -278,21 +278,21 @@ export default function Home() {
         }
     }, [])
 
-    // Fetch weekend events
-    const fetchWeekendEvents = useCallback(async () => {
+    // Fetch this week events
+    const fetchThisWeekEvents = useCallback(async () => {
         try {
-            setLoadingWeekend(true)
+            setLoadingThisWeek(true)
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/events/weekend?limit=8`
+                `${process.env.NEXT_PUBLIC_API_URL}/events/this-week?limit=8`
             )
             const result = await response.json()
             if (result.success) {
-                setWeekendEvents(result.data)
+                setThisWeekEvents(result.data)
             }
         } catch (err) {
-            console.error("Error fetching weekend events:", err)
+            console.error("Error fetching this week events:", err)
         } finally {
-            setLoadingWeekend(false)
+            setLoadingThisWeek(false)
         }
     }, [])
 
@@ -318,13 +318,13 @@ export default function Home() {
         fetchCategories()
         fetchFeaturedEvents()
         fetchTrendingEvents()
-        fetchWeekendEvents()
+        fetchThisWeekEvents()
         fetchThisMonthEvents()
     }, [
         fetchCategories,
         fetchFeaturedEvents,
         fetchTrendingEvents,
-        fetchWeekendEvents,
+        fetchThisWeekEvents,
         fetchThisMonthEvents,
     ])
 
@@ -392,6 +392,7 @@ export default function Home() {
                                                             src={event.imageUrl}
                                                             alt={event.title}
                                                             fill
+                                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                             className="object-cover"
                                                         />
                                                     ) : (
@@ -467,12 +468,12 @@ export default function Home() {
                     viewAllLink="/events"
                 />
 
-                {/* This Weekend */}
+                {/* This Week */}
                 <EventSection
-                    title="This Weekend"
+                    title="This Week"
                     icon={CalendarDays}
-                    events={weekendEvents}
-                    isLoading={loadingWeekend}
+                    events={thisWeekEvents}
+                    isLoading={loadingThisWeek}
                     getCategoryName={getCategoryName}
                     formatDate={formatDate}
                     formatPrice={formatPrice}

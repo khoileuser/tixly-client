@@ -105,17 +105,30 @@ export default function Navbar() {
                             Events
                         </Link>
                         {authState.userRole === "admin" && (
-                            <Link
-                                href="/analytics"
-                                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                                    isActive("/analytics") ||
-                                    pathname.startsWith("/analytics")
-                                        ? "text-blue-600"
-                                        : "text-gray-700"
-                                }`}
-                            >
-                                Analytics
-                            </Link>
+                            <>
+                                <Link
+                                    href="/admin/events"
+                                    className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                        isActive("/admin/events") ||
+                                        pathname.startsWith("/admin/events")
+                                            ? "text-blue-600"
+                                            : "text-gray-700"
+                                    }`}
+                                >
+                                    Manage Events
+                                </Link>
+                                <Link
+                                    href="/admin/analytics"
+                                    className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                        isActive("/admin/analytics") ||
+                                        pathname.startsWith("/admin/analytics")
+                                            ? "text-blue-600"
+                                            : "text-gray-700"
+                                    }`}
+                                >
+                                    Analytics
+                                </Link>
+                            </>
                         )}
                     </div>
 
@@ -195,18 +208,32 @@ export default function Navbar() {
                                 Events
                             </Link>
                             {authState.userRole === "admin" && (
-                                <Link
-                                    href="/analytics"
-                                    className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                                        isActive("/analytics") ||
-                                        pathname.startsWith("/analytics")
-                                            ? "text-blue-600"
-                                            : "text-gray-700"
-                                    }`}
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    Analytics
-                                </Link>
+                                <>
+                                    <Link
+                                        href="/admin/events"
+                                        className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                            isActive("/admin/events") ||
+                                            pathname.startsWith("/admin/events")
+                                                ? "text-blue-600"
+                                                : "text-gray-700"
+                                        }`}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Manage Events
+                                    </Link>
+                                    <Link
+                                        href="/analytics"
+                                        className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                                            isActive("/analytics") ||
+                                            pathname.startsWith("/analytics")
+                                                ? "text-blue-600"
+                                                : "text-gray-700"
+                                        }`}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Analytics
+                                    </Link>
+                                </>
                             )}
 
                             <div className="pt-4 border-t flex flex-col gap-3">
