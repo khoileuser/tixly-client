@@ -39,9 +39,9 @@ jobs:
 
       - name: Sync files to S3 bucket
         run: |
-          aws s3 sync out/ s3://${{ secrets.S3_BUCKET_NAME }}/client --delete --cache-control max-age=31536000,public
+          aws s3 sync out/ s3://${{ secrets.S3_BUCKET_NAME }}/ --delete --cache-control max-age=31536000,public
           # Set cache control for HTML files to no-cache for better updates
-          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/client s3://${{ secrets.S3_BUCKET_NAME }}/client \
+          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --exclude "*" \
             --include "*.html" \
             --recursive \
@@ -55,7 +55,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Bucket:** ${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Deploy Path:** \`client/\` directory" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy Path:** Root directory" >> $GITHUB_STEP_SUMMARY
           echo "**Build Output:** \`out/\` directory" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Visit your S3 website URL at /client/ to see the changes!" >> $GITHUB_STEP_SUMMARY
+          echo "Visit your S3 website URL to see the changes!" >> $GITHUB_STEP_SUMMARY
