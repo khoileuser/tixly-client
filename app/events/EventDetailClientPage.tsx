@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -27,18 +27,7 @@ import {
 } from "lucide-react"
 import type { Event, Category } from "@/interfaces"
 
-// Required for static export - this tells Next.js to generate this page at build time
-// Since we're using client-side rendering, we export an empty array
-export function generateStaticParams() {
-    return []
-}
-
-export default function EventDetailsPage({
-    params,
-}: {
-    params: Promise<{ id: string }>
-}) {
-    const { id } = use(params)
+export default function EventDetailClientPage({ id }: { id: string }) {
     const router = useRouter()
     const [event, setEvent] = useState<Event | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -80,7 +69,7 @@ export default function EventDetailsPage({
             router.push(`/login?returnUrl=/booking/${id}`)
         } else {
             // Go to booking page
-            router.push(`/booking/${id}`)
+            router.push(`/booking?id=${id}`)
         }
     }
 

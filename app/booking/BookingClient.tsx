@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -36,20 +36,9 @@ import { bookingService } from "@/lib/booking"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Event } from "@/interfaces"
 
-// Required for static export - this tells Next.js to generate this page at build time
-// Since we're using client-side rendering, we export an empty array
-export function generateStaticParams() {
-    return []
-}
-
 type BookingStep = "seats" | "payment" | "info" | "confirmation"
 
-export default function BookingPage({
-    params,
-}: {
-    params: Promise<{ id: string }>
-}) {
-    const { id: eventId } = use(params)
+export default function BookingClient({ eventId }: { eventId: string }) {
     const router = useRouter()
 
     // Event data
