@@ -36,6 +36,12 @@ import { bookingService } from "@/lib/booking"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Event } from "@/interfaces"
 
+// Required for static export - this tells Next.js to generate this page at build time
+// Since we're using client-side rendering, we export an empty array
+export function generateStaticParams() {
+    return []
+}
+
 type BookingStep = "seats" | "payment" | "info" | "confirmation"
 
 export default function BookingPage({

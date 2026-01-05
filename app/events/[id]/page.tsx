@@ -27,6 +27,12 @@ import {
 } from "lucide-react"
 import type { Event, Category } from "@/interfaces"
 
+// Required for static export - this tells Next.js to generate this page at build time
+// Since we're using client-side rendering, we export an empty array
+export function generateStaticParams() {
+    return []
+}
+
 export default function EventDetailsPage({
     params,
 }: {
