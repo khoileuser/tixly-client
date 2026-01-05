@@ -46,7 +46,7 @@ function EventCard({
 }) {
     return (
         <Link
-            href={`/events/${event.id}`}
+            href={`/events?id=${event.id}`}
             className="block transition-transform hover:scale-[1.02]"
         >
             <Card className="h-full overflow-hidden pt-0">
@@ -384,7 +384,7 @@ export default function Home() {
                                         key={event.id}
                                         className="basis-1/1 md:basis-1/2 lg:basis-1/3"
                                     >
-                                        <Link href={`/events/${event.id}`}>
+                                        <Link href={`/events?id=${event.id}`}>
                                             <Card className="overflow-hidden border-0 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors pt-0 pb-0">
                                                 <div className="relative h-48 md:h-56">
                                                     {event.imageUrl ? (

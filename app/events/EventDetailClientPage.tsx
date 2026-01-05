@@ -66,7 +66,7 @@ export default function EventDetailClientPage({ id }: { id: string }) {
         const token = localStorage.getItem("accessToken")
         if (!token) {
             // Redirect to login with return URL
-            router.push(`/login?returnUrl=/booking/${id}`)
+            router.push(`/login?returnUrl=/booking?id=${id}`)
         } else {
             // Go to booking page
             router.push(`/booking?id=${id}`)

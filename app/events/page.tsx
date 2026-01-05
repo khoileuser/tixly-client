@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import type { Event, Category } from "@/interfaces"
+import EventDetailClientPage from "./EventDetailClientPage"
 
 interface SearchParams {
     search: string
@@ -51,7 +53,20 @@ interface SearchParams {
     sortOrder: string
 }
 
-export default function EventsPage() {
+function EventsListPage() {
+    const urlSearchParams = useSearchParams()
+    const eventId = urlSearchParams?.get("id")
+
+    // If there's an event ID, show the detail page
+    if (eventId) {
+        return <EventDetailClientPage id={eventId} />
+    }
+
+    // Otherwise show the events list
+    return <EventsList />
+}
+
+function EventsList() {
     const [events, setEvents] = useState<Event[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
@@ -549,7 +564,7 @@ export default function EventsPage() {
                         {events.map((event) => (
                             <Link
                                 key={event.id}
-                                href={`/events/${event.id}`}
+                                href={`/events?id=${event.id}`}
                                 className="block transition-transform hover:scale-[1.02]"
                             >
                                 <Card className="h-full overflow-hidden pt-0">
@@ -643,5 +658,19 @@ export default function EventsPage() {
                 )}
             </div>
         </div>
+    )
+}
+
+export default function EventsPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-lg">Loading...</div>
+                </div>
+            }
+        >
+            <EventsListPage />
+        </Suspense>
     )
 }

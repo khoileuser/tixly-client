@@ -79,7 +79,7 @@ export default function ProfilePage() {
     const handleContinueBooking = () => {
         if (selectedTicket && selectedTicket.eventId) {
             setIsDialogOpen(false)
-            router.push(`/booking/${selectedTicket.eventId}`)
+            router.push(`/booking?id=${selectedTicket.eventId}`)
         }
     }
 

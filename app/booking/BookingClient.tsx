@@ -245,7 +245,7 @@ export default function BookingClient({ eventId }: { eventId: string }) {
         }
         // Clear the saved booking state
         sessionStorage.removeItem(`booking_${eventId}`)
-        router.push(`/events/${eventId}`)
+        router.push(`/events?id=${eventId}`)
     }
 
     const handleSeatToggle = (seat: number) => {
@@ -469,7 +469,7 @@ export default function BookingClient({ eventId }: { eventId: string }) {
             // Close dialog
             setShowCancelDialog(false)
             // Redirect back to event page
-            router.push(`/events/${eventId}`)
+            router.push(`/events?id=${eventId}`)
         } catch (err) {
             setError(
                 err instanceof Error ? err.message : "Failed to cancel booking"
