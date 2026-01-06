@@ -1,4 +1,4 @@
-name: Deploy to AWS S3
+name: Build and Push to AWS S3
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   AWS_REGION: "us-east-1"
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
