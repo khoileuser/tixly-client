@@ -27,7 +27,7 @@ jobs:
       - name: Build Next.js static export
         run: bun run build
         env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -39,9 +39,9 @@ jobs:
 
       - name: Sync files to S3 bucket
         run: |
-          aws s3 sync out/ s3://${{ secrets.S3_BUCKET_NAME }}/ --delete --cache-control max-age=31536000,public
+          aws s3 sync out/ s3://${{ vars.S3_BUCKET_NAME }}/ --delete --cache-control max-age=31536000,public
           # Set cache control for HTML files to no-cache for better updates
-          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
+          aws s3 cp s3://${{ vars.S3_BUCKET_NAME }}/ s3://${{ vars.S3_BUCKET_NAME }}/ \
             --exclude "*" \
             --include "*.html" \
             --recursive \
@@ -53,7 +53,7 @@ jobs:
         run: |
           echo "### Deployment Successful! :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Bucket:** ${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bucket:** ${{ vars.S3_BUCKET_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
           echo "**Deploy Path:** Root directory" >> $GITHUB_STEP_SUMMARY
           echo "**Build Output:** \`out/\` directory" >> $GITHUB_STEP_SUMMARY
